@@ -49,13 +49,13 @@ export default function Home() {
     setLoading(true)
     try {
       let query = supabase.from('wishlists').select('*')
-      
+
       if (activeModal === 'travels') {
         query = query.eq('category', 'location')
       } else if (activeModal) {
         query = query.eq('user_id', activeModal).eq('category', 'gift')
       }
-      
+
       const { data, error } = await query.order('created_at', { ascending: false })
       if (error) throw error
       setItems(data || [])
@@ -68,7 +68,7 @@ export default function Home() {
 
   async function addItem(formData: FormData) {
     const isTravel = activeModal === 'travels'
-    
+
     const newItem = {
       user_id: isTravel ? 'shared' : activeModal,
       category: isTravel ? 'location' : 'gift',
@@ -124,7 +124,7 @@ export default function Home() {
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header */}
         <header className="flex items-center justify-center p-6">
-          <h1 className="text-4xl md:text-5xl tracking-wide drop-shadow-sm" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+          <h1 className="text-4xl md:text-5xl tracking-wide" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
             4 OF A KIND
           </h1>
         </header>
@@ -133,23 +133,22 @@ export default function Home() {
         <div className="relative flex-grow">
           {/* Central Car */}
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform duration-200 hover:scale-110"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer"
             onMouseEnter={() => setHoveredChar('car')}
             onMouseLeave={() => setHoveredChar(null)}
             onClick={() => setActiveModal('travels')}
           >
             {hoveredChar === 'car' && (
-              <div className="absolute -top-14 left-1/2 -translate-x-1/2 flex flex-col items-center animate-fade-in">
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 flex flex-col items-center animate-fade-in">
                 <span className="text-xl font-bold whitespace-nowrap" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
                   Travel Plans
                 </span>
-                <img src="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/SquiggleLine.png" alt="" className="w-20 -mt-1 opacity-80" />
               </div>
             )}
             <img
               src="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Car.png"
               alt="Travel Plans"
-              className="w-32 md:w-48 drop-shadow-lg"
+              className="char-size"
             />
           </div>
 
@@ -157,24 +156,23 @@ export default function Home() {
           {characters.map((char) => (
             <div
               key={char.id}
-              className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform duration-200 hover:scale-110"
+              className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer"
               style={{ top: char.top, left: char.left }}
               onMouseEnter={() => setHoveredChar(char.id)}
               onMouseLeave={() => setHoveredChar(null)}
               onClick={() => setActiveModal(char.id as ModalType)}
             >
               {hoveredChar === char.id && (
-                <div className="absolute -top-14 left-1/2 -translate-x-1/2 flex flex-col items-center animate-fade-in">
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 flex flex-col items-center animate-fade-in">
                   <span className="text-xl font-bold whitespace-nowrap" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
                     {char.name}
                   </span>
-                  <img src="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/SquiggleLine.png" alt="" className="w-20 -mt-1 opacity-80" />
                 </div>
               )}
               <img
                 src={char.image}
                 alt={char.name}
-                className="w-24 md:w-36 drop-shadow-lg"
+                className="char-size"
               />
             </div>
           ))}
@@ -183,9 +181,9 @@ export default function Home() {
 
       {/* Modal Overlay */}
       {activeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 animate-fade-in">
           <div
-            className="relative w-full max-w-2xl max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden"
+            className="relative w-full max-w-2xl max-h-[85vh] rounded-3xl overflow-hidden"
             style={{ backgroundColor: '#f5f0e8' }}
           >
             {/* Modal Header */}
@@ -227,7 +225,7 @@ export default function Home() {
                   {items.map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-2xl p-4 shadow-md transition-shadow hover:shadow-lg"
+                      className="rounded-2xl p-4"
                       style={{ backgroundColor: '#fff' }}
                     >
                       <div className="flex gap-4">
@@ -250,7 +248,7 @@ export default function Home() {
                               <Trash2 size={18} />
                             </button>
                           </div>
-                          
+
                           {/* Priority/Status Badge */}
                           {(item.priority || item.status) && (
                             <span
@@ -296,178 +294,181 @@ export default function Home() {
 
                           {/* Link button */}
                           {item.link && (
-                            <a
-                              href={item.link}
+
+                            href = { item.link }
                               target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl text-white text-sm transition-opacity hover:opacity-80"
-                              style={{ backgroundColor: '#7c9a6e', fontFamily: 'var(--font-darumadrop)' }}
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl text-white text-sm transition-opacity hover:opacity-80"
+                          style={{ backgroundColor: '#7c9a6e', fontFamily: 'var(--font-darumadrop)' }}
                             >
-                              <ExternalLink size={14} />
-                              View Link
-                            </a>
+                          <ExternalLink size={14} />
+                          View Link
+                        </a>
                           )}
-                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                    </div>
+              ))}
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Item Form Modal */}
-      {showAddForm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 animate-fade-in">
-          <div
-            className="relative w-full max-w-md rounded-3xl shadow-2xl p-6"
-            style={{ backgroundColor: '#f5f0e8' }}
-          >
-            <button
-              onClick={() => setShowAddForm(false)}
-              className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/50 transition-colors"
-              style={{ color: '#5a4a3a' }}
-            >
-              <X size={20} />
-            </button>
-
-            <h3 className="text-2xl mb-6" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-              Add {isTravel ? 'Destination' : 'Wish'}
-            </h3>
-
-            <form action={addItem} className="space-y-4">
-              <div>
-                <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-                  {isTravel ? 'Place Name' : 'Item Name'} *
-                </label>
-                <input
-                  name="item_name"
-                  required
-                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-                  style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-                  Image URL
-                </label>
-                <input
-                  name="image_url"
-                  type="url"
-                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-                  style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-                  placeholder="https://..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-                  Link
-                </label>
-                <input
-                  name="link"
-                  type="url"
-                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-                  style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-                  placeholder="https://..."
-                />
-              </div>
-
-              {isTravel ? (
-                <>
-                  <div>
-                    <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-                      Status
-                    </label>
-                    <select
-                      name="status"
-                      className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-                      style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-                    >
-                      <option value="dreaming">Dreaming</option>
-                      <option value="booked">Booked</option>
-                      <option value="visited">Visited</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-                      Date to Go
-                    </label>
-                    <input
-                      name="date_to_go"
-                      type="date"
-                      className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-                      style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-                      Estimated Budget
-                    </label>
-                    <input
-                      name="estimated_budget"
-                      className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-                      style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-                      placeholder="e.g. $500-1000"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-                      Activities
-                    </label>
-                    <input
-                      name="activity_tags"
-                      className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-                      style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-                      placeholder="Foodie, Nature, Adventure..."
-                    />
-                  </div>
-                </>
-              ) : (
-                <div>
-                  <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-                    Priority
-                  </label>
-                  <select
-                    name="priority"
-                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-                    style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-                  >
-                    <option value="high">High Priority</option>
-                    <option value="medium">Medium</option>
-                    <option value="someday">Someday</option>
-                  </select>
-                </div>
               )}
+          </div>
+        </div>
+        </div>
+  )
+}
 
+{/* Add Item Form Modal */ }
+{
+  showAddForm && (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 animate-fade-in">
+      <div
+        className="relative w-full max-w-md rounded-3xl p-6"
+        style={{ backgroundColor: '#f5f0e8' }}
+      >
+        <button
+          onClick={() => setShowAddForm(false)}
+          className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/50 transition-colors"
+          style={{ color: '#5a4a3a' }}
+        >
+          <X size={20} />
+        </button>
+
+        <h3 className="text-2xl mb-6" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+          Add {isTravel ? 'Destination' : 'Wish'}
+        </h3>
+
+        <form action={addItem} className="space-y-4">
+          <div>
+            <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+              {isTravel ? 'Place Name' : 'Item Name'} *
+            </label>
+            <input
+              name="item_name"
+              required
+              className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+              style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+              Image URL
+            </label>
+            <input
+              name="image_url"
+              type="url"
+              className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+              style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+              placeholder="https://..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+              Link
+            </label>
+            <input
+              name="link"
+              type="url"
+              className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+              style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+              placeholder="https://..."
+            />
+          </div>
+
+          {isTravel ? (
+            <>
               <div>
                 <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-                  {isTravel ? 'Notes' : 'Why I want this'}
+                  Status
                 </label>
-                <textarea
-                  name="note"
-                  rows={3}
-                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors resize-none"
+                <select
+                  name="status"
+                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                  style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                >
+                  <option value="dreaming">Dreaming</option>
+                  <option value="booked">Booked</option>
+                  <option value="visited">Visited</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                  Date to Go
+                </label>
+                <input
+                  name="date_to_go"
+                  type="date"
+                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
                   style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
                 />
               </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 rounded-xl text-white text-lg transition-opacity hover:opacity-90"
-                style={{ backgroundColor: '#7c9a6e', fontFamily: 'var(--font-darumadrop)' }}
+              <div>
+                <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                  Estimated Budget
+                </label>
+                <input
+                  name="estimated_budget"
+                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                  style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                  placeholder="e.g. $500-1000"
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                  Activities
+                </label>
+                <input
+                  name="activity_tags"
+                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                  style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                  placeholder="Foodie, Nature, Adventure..."
+                />
+              </div>
+            </>
+          ) : (
+            <div>
+              <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                Priority
+              </label>
+              <select
+                name="priority"
+                className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
               >
-                Add {isTravel ? 'Destination' : 'to Wishlist'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+                <option value="high">High Priority</option>
+                <option value="medium">Medium</option>
+                <option value="someday">Someday</option>
+              </select>
+            </div>
+          )}
 
-      <style jsx>{`
+          <div>
+            <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+              {isTravel ? 'Notes' : 'Why I want this'}
+            </label>
+            <textarea
+              name="note"
+              rows={3}
+              className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors resize-none"
+              style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-3 rounded-xl text-white text-lg transition-opacity hover:opacity-90"
+            style={{ backgroundColor: '#7c9a6e', fontFamily: 'var(--font-darumadrop)' }}
+          >
+            Add {isTravel ? 'Destination' : 'to Wishlist'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+<style jsx>{`
         @keyframes fade-in {
           from { opacity: 0; }
           to { opacity: 1; }
@@ -475,7 +476,18 @@ export default function Home() {
         .animate-fade-in {
           animation: fade-in 0.2s ease-out;
         }
+        /* Landscape: 12vw, Portrait: 12vh */
+        .char-size {
+          width: 12vw;
+          height: auto;
+        }
+        @media (orientation: portrait) {
+          .char-size {
+            width: auto;
+            height: 12vh;
+          }
+        }
       `}</style>
-    </div>
+    </div >
   )
 }
