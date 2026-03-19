@@ -1,157 +1,481 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { motion } from 'motion/react'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { X, Plus, ExternalLink, Trash2, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react'
 
-interface CharacterCardProps {
-  name: string
-  imageUrl: string
-  onClick: () => void
-  isLarge?: boolean
+type WishlistItem = {
+  id: string
+  user_id: string
+  category: string
+  item_name: string
+  link?: string
+  image_url?: string
+  priority?: string
+  note?: string
+  status?: string
+  date_to_go?: string
+  estimated_budget?: string
+  activity_tags?: string
+  locations?: { name: string; image_url?: string }[]
 }
 
-function CharacterCard({ name, imageUrl, onClick, isLarge = false }: CharacterCardProps) {
-  const [isHovered, setIsHovered] = useState(false)
-
-  return (
-    <motion.div
-      className="relative cursor-pointer flex flex-col items-center justify-center"
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      whileHover={{ scale: 1.08 }}
-      onClick={onClick}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      style={{
-        width: isLarge ? 'clamp(120px, 15vw, 280px)' : 'clamp(90px, 12vw, 220px)',
-        height: 'auto',
-      }}
-    >
-      {/* Name tag on hover */}
-      {isHovered && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute -top-16 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center"
-        >
-          <span
-            className="text-2xl font-bold whitespace-nowrap px-4 py-2 drop-shadow-sm"
-            style={{ color: '#5a4a3a' }}
-          >
-            {name}
-          </span>
-          <img
-            src="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/SquiggleLine.png"
-            alt=""
-            className="w-24 -mt-2 opacity-80"
-            style={{ filter: 'blur(0.3px)' }}
-          />
-        </motion.div>
-      )}
-
-      {/* Character image */}
-      <img
-        src={imageUrl}
-        alt={name}
-        className="w-full h-auto drop-shadow-[0_15px_15px_rgba(0,0,0,0.15)]"
-        style={{ filter: 'contrast(0.98) brightness(1.02)', imageRendering: 'auto' }}
-      />
-    </motion.div>
-  )
-}
+type ModalType = 'bunny' | 'fox' | 'cat' | 'golden' | 'travels' | null
 
 export default function Home() {
-  const router = useRouter()
+  const [activeModal, setActiveModal] = useState<ModalType>(null)
+  const [items, setItems] = useState<WishlistItem[]>([])
+  const [loading, setLoading] = useState(false)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [expandedNote, setExpandedNote] = useState<string | null>(null)
+  const [hoveredChar, setHoveredChar] = useState<string | null>(null)
+
+  const supabase = createClient()
+
+  const characters = [
+    { id: 'bunny', name: 'Bunny', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Bunny.png', top: '22%', left: '22%' },
+    { id: 'fox', name: 'Fox', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Fox.png', top: '22%', left: '78%' },
+    { id: 'cat', name: 'Cat', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Cat.png', top: '72%', left: '25%' },
+    { id: 'golden', name: 'Golden', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Golden.png', top: '72%', left: '75%' },
+  ]
+
+  useEffect(() => {
+    if (activeModal) {
+      fetchItems()
+    }
+  }, [activeModal])
+
+  async function fetchItems() {
+    setLoading(true)
+    try {
+      let query = supabase.from('wishlists').select('*')
+      
+      if (activeModal === 'travels') {
+        query = query.eq('category', 'location')
+      } else if (activeModal) {
+        query = query.eq('user_id', activeModal).eq('category', 'gift')
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false })
+      if (error) throw error
+      setItems(data || [])
+    } catch (error) {
+      console.error('Error fetching items:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function addItem(formData: FormData) {
+    const isTravel = activeModal === 'travels'
+    
+    const newItem = {
+      user_id: isTravel ? 'shared' : activeModal,
+      category: isTravel ? 'location' : 'gift',
+      item_name: formData.get('item_name') as string,
+      link: formData.get('link') as string || null,
+      image_url: formData.get('image_url') as string || null,
+      priority: isTravel ? null : formData.get('priority') as string,
+      note: formData.get('note') as string || null,
+      status: isTravel ? (formData.get('status') as string || 'dreaming') : null,
+      date_to_go: isTravel ? (formData.get('date_to_go') as string || null) : null,
+      estimated_budget: isTravel ? (formData.get('estimated_budget') as string || null) : null,
+      activity_tags: isTravel ? (formData.get('activity_tags') as string || null) : null,
+    }
+
+    try {
+      const { error } = await supabase.from('wishlists').insert(newItem)
+      if (error) throw error
+      setShowAddForm(false)
+      fetchItems()
+    } catch (error) {
+      console.error('Error adding item:', error)
+    }
+  }
+
+  async function deleteItem(id: string) {
+    try {
+      const { error } = await supabase.from('wishlists').delete().eq('id', id)
+      if (error) throw error
+      fetchItems()
+    } catch (error) {
+      console.error('Error deleting item:', error)
+    }
+  }
+
+  function closeModal() {
+    setActiveModal(null)
+    setShowAddForm(false)
+    setItems([])
+  }
+
+  const isTravel = activeModal === 'travels'
+  const modalTitle = isTravel ? 'Travel Plans' : activeModal ? `${activeModal.charAt(0).toUpperCase() + activeModal.slice(1)}'s Wishlist` : ''
 
   return (
-    <div
-      className="min-h-screen w-full relative overflow-hidden select-none"
-      style={{ fontFamily: 'var(--font-darumadrop)' }}
-    >
-      {/* Full-screen grass background */}
+    <div className="min-h-screen w-full relative overflow-hidden select-none">
+      {/* Background */}
       <div
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage:
-            "url('https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Background.png')",
-          backgroundSize: 'cover',
-        }}
+        className="fixed inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Background.png')" }}
       />
 
-      {/* UI Overlay */}
+      {/* Main Content */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header */}
         <header className="flex items-center justify-center p-6">
-          <h1
-            className="text-4xl md:text-6xl tracking-tight drop-shadow-sm"
-            style={{ color: '#5a4a3a' }}
-          >
+          <h1 className="text-4xl md:text-5xl tracking-wide drop-shadow-sm" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
             4 OF A KIND
           </h1>
         </header>
 
-        {/* Canvas area */}
-        <div className="relative flex-grow w-full overflow-hidden">
-
-          {/* Central Car — shared travels */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-            <CharacterCard
-              isLarge
-              name="Shared Location"
-              imageUrl="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Car.png"
-              onClick={() => router.push('/travels')}
-            />
-          </div>
-
-          {/* Bunny — Top Left */}
+        {/* Characters Canvas */}
+        <div className="relative flex-grow">
+          {/* Central Car */}
           <div
-            className="absolute -translate-x-1/2 -translate-y-1/2"
-            style={{ top: '25%', left: '25%' }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform duration-200 hover:scale-110"
+            onMouseEnter={() => setHoveredChar('car')}
+            onMouseLeave={() => setHoveredChar(null)}
+            onClick={() => setActiveModal('travels')}
           >
-            <CharacterCard
-              name="Bunny"
-              imageUrl="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Bunny.png"
-              onClick={() => router.push('/gifts?character=bunny')}
+            {hoveredChar === 'car' && (
+              <div className="absolute -top-14 left-1/2 -translate-x-1/2 flex flex-col items-center animate-fade-in">
+                <span className="text-xl font-bold whitespace-nowrap" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                  Travel Plans
+                </span>
+                <img src="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/SquiggleLine.png" alt="" className="w-20 -mt-1 opacity-80" />
+              </div>
+            )}
+            <img
+              src="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Car.png"
+              alt="Travel Plans"
+              className="w-32 md:w-48 drop-shadow-lg"
             />
           </div>
 
-          {/* Fox — Top Right */}
-          <div
-            className="absolute -translate-x-1/2 -translate-y-1/2"
-            style={{ top: '25%', left: '75%' }}
-          >
-            <CharacterCard
-              name="Fox"
-              imageUrl="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Fox.png"
-              onClick={() => router.push('/gifts?character=fox')}
-            />
-          </div>
-
-          {/* Cat — Bottom Left */}
-          <div
-            className="absolute -translate-x-1/2 -translate-y-1/2"
-            style={{ top: '75%', left: '25%' }}
-          >
-            <CharacterCard
-              name="Cat"
-              imageUrl="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Cat.png"
-              onClick={() => router.push('/gifts?character=cat')}
-            />
-          </div>
-
-          {/* Golden — Bottom Right */}
-          <div
-            className="absolute -translate-x-1/2 -translate-y-1/2"
-            style={{ top: '75%', left: '75%' }}
-          >
-            <CharacterCard
-              name="Golden"
-              imageUrl="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Golden.png"
-              onClick={() => router.push('/gifts?character=golden')}
-            />
-          </div>
+          {/* Characters */}
+          {characters.map((char) => (
+            <div
+              key={char.id}
+              className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform duration-200 hover:scale-110"
+              style={{ top: char.top, left: char.left }}
+              onMouseEnter={() => setHoveredChar(char.id)}
+              onMouseLeave={() => setHoveredChar(null)}
+              onClick={() => setActiveModal(char.id as ModalType)}
+            >
+              {hoveredChar === char.id && (
+                <div className="absolute -top-14 left-1/2 -translate-x-1/2 flex flex-col items-center animate-fade-in">
+                  <span className="text-xl font-bold whitespace-nowrap" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                    {char.name}
+                  </span>
+                  <img src="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/SquiggleLine.png" alt="" className="w-20 -mt-1 opacity-80" />
+                </div>
+              )}
+              <img
+                src={char.image}
+                alt={char.name}
+                className="w-24 md:w-36 drop-shadow-lg"
+              />
+            </div>
+          ))}
         </div>
       </div>
+
+      {/* Modal Overlay */}
+      {activeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+          <div
+            className="relative w-full max-w-2xl max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden"
+            style={{ backgroundColor: '#f5f0e8' }}
+          >
+            {/* Modal Header */}
+            <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b" style={{ backgroundColor: '#f5f0e8', borderColor: '#d4c9b8' }}>
+              <button
+                onClick={closeModal}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl transition-colors hover:bg-white/50"
+                style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}
+              >
+                <ArrowLeft size={20} />
+                Back
+              </button>
+              <h2 className="text-2xl" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                {modalTitle}
+              </h2>
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-white transition-colors"
+                style={{ backgroundColor: '#7c9a6e', fontFamily: 'var(--font-darumadrop)' }}
+              >
+                <Plus size={18} />
+                Add
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-4 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 80px)' }}>
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#7c9a6e', borderTopColor: 'transparent' }} />
+                </div>
+              ) : items.length === 0 ? (
+                <div className="text-center py-12" style={{ color: '#8a7a6a', fontFamily: 'var(--font-darumadrop)' }}>
+                  <p className="text-xl mb-2">Nothing here yet!</p>
+                  <p className="text-sm">Click "Add" to add your first {isTravel ? 'destination' : 'wish'}.</p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-2xl p-4 shadow-md transition-shadow hover:shadow-lg"
+                      style={{ backgroundColor: '#fff' }}
+                    >
+                      <div className="flex gap-4">
+                        {item.image_url && (
+                          <img
+                            src={item.image_url}
+                            alt={item.item_name}
+                            className="w-24 h-24 object-cover rounded-xl flex-shrink-0"
+                          />
+                        )}
+                        <div className="flex-grow min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="text-lg font-bold truncate" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                              {item.item_name}
+                            </h3>
+                            <button
+                              onClick={() => deleteItem(item.id)}
+                              className="p-1 rounded-lg text-red-400 hover:bg-red-50 transition-colors flex-shrink-0"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                          
+                          {/* Priority/Status Badge */}
+                          {(item.priority || item.status) && (
+                            <span
+                              className="inline-block px-3 py-1 rounded-full text-xs mt-2"
+                              style={{
+                                backgroundColor: item.priority === 'high' || item.status === 'booked' ? '#e8a87c' :
+                                  item.priority === 'medium' || item.status === 'visited' ? '#7c9a6e' : '#a8c5b5',
+                                color: '#fff',
+                                fontFamily: 'var(--font-darumadrop)'
+                              }}
+                            >
+                              {item.priority || item.status}
+                            </span>
+                          )}
+
+                          {/* Travel specific info */}
+                          {isTravel && (
+                            <div className="mt-2 text-sm" style={{ color: '#8a7a6a' }}>
+                              {item.date_to_go && <p>Date: {new Date(item.date_to_go).toLocaleDateString()}</p>}
+                              {item.estimated_budget && <p>Budget: {item.estimated_budget}</p>}
+                              {item.activity_tags && <p>Activities: {item.activity_tags}</p>}
+                            </div>
+                          )}
+
+                          {/* Note expandable */}
+                          {item.note && (
+                            <div className="mt-2">
+                              <button
+                                onClick={() => setExpandedNote(expandedNote === item.id ? null : item.id)}
+                                className="flex items-center gap-1 text-sm"
+                                style={{ color: '#7c9a6e', fontFamily: 'var(--font-darumadrop)' }}
+                              >
+                                {expandedNote === item.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                {isTravel ? 'Notes' : 'Why I want this'}
+                              </button>
+                              {expandedNote === item.id && (
+                                <p className="mt-2 text-sm p-3 rounded-xl" style={{ backgroundColor: '#f5f0e8', color: '#5a4a3a' }}>
+                                  {item.note}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Link button */}
+                          {item.link && (
+                            <a
+                              href={item.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl text-white text-sm transition-opacity hover:opacity-80"
+                              style={{ backgroundColor: '#7c9a6e', fontFamily: 'var(--font-darumadrop)' }}
+                            >
+                              <ExternalLink size={14} />
+                              View Link
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Item Form Modal */}
+      {showAddForm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 animate-fade-in">
+          <div
+            className="relative w-full max-w-md rounded-3xl shadow-2xl p-6"
+            style={{ backgroundColor: '#f5f0e8' }}
+          >
+            <button
+              onClick={() => setShowAddForm(false)}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/50 transition-colors"
+              style={{ color: '#5a4a3a' }}
+            >
+              <X size={20} />
+            </button>
+
+            <h3 className="text-2xl mb-6" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+              Add {isTravel ? 'Destination' : 'Wish'}
+            </h3>
+
+            <form action={addItem} className="space-y-4">
+              <div>
+                <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                  {isTravel ? 'Place Name' : 'Item Name'} *
+                </label>
+                <input
+                  name="item_name"
+                  required
+                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                  style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                  Image URL
+                </label>
+                <input
+                  name="image_url"
+                  type="url"
+                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                  style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                  Link
+                </label>
+                <input
+                  name="link"
+                  type="url"
+                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                  style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                  placeholder="https://..."
+                />
+              </div>
+
+              {isTravel ? (
+                <>
+                  <div>
+                    <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                      Status
+                    </label>
+                    <select
+                      name="status"
+                      className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                      style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                    >
+                      <option value="dreaming">Dreaming</option>
+                      <option value="booked">Booked</option>
+                      <option value="visited">Visited</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                      Date to Go
+                    </label>
+                    <input
+                      name="date_to_go"
+                      type="date"
+                      className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                      style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                      Estimated Budget
+                    </label>
+                    <input
+                      name="estimated_budget"
+                      className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                      style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                      placeholder="e.g. $500-1000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                      Activities
+                    </label>
+                    <input
+                      name="activity_tags"
+                      className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                      style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                      placeholder="Foodie, Nature, Adventure..."
+                    />
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                    Priority
+                  </label>
+                  <select
+                    name="priority"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                    style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                  >
+                    <option value="high">High Priority</option>
+                    <option value="medium">Medium</option>
+                    <option value="someday">Someday</option>
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                  {isTravel ? 'Notes' : 'Why I want this'}
+                </label>
+                <textarea
+                  name="note"
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors resize-none"
+                  style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl text-white text-lg transition-opacity hover:opacity-90"
+                style={{ backgroundColor: '#7c9a6e', fontFamily: 'var(--font-darumadrop)' }}
+              >
+                Add {isTravel ? 'Destination' : 'to Wishlist'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
+      `}</style>
     </div>
   )
 }
