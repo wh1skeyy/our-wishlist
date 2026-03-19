@@ -1,10 +1,18 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Comfortaa, Caveat } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const comfortaa = Comfortaa({ 
+  subsets: ["latin"],
+  variable: '--font-comfortaa',
+  weight: ['400', '700']
+});
+const caveat = Caveat({ 
+  subsets: ["latin"],
+  variable: '--font-caveat',
+  weight: ['400', '700']
+});
 
 export const metadata: Metadata = {
   title: '4 of a Kind - Group Wishlist',
@@ -36,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased">
+      <body className={`${comfortaa.variable} ${caveat.variable} font-sans antialiased`}>
         {children}
         <Analytics />
       </body>
