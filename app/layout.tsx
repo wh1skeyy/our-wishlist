@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: '4 of a Kind - Group Wishlist',
+  description: 'Shared gift wishlists and travel plans for your close group of friends',
   generator: 'v0.app',
   icons: {
     icon: [

@@ -1,27 +1,22 @@
--- Create wishlists table with JSONB for flexible data storage
--- No RLS required - publicly readable and writable
-
-CREATE TABLE IF NOT EXISTS wishlists (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id TEXT NOT NULL, -- 'bunny', 'fox', 'golden', 'cat' for characters, or 'location' for travel
-  category TEXT NOT NULL DEFAULT 'gift', -- 'gift' or 'location'
-  item_name TEXT NOT NULL,
-  link TEXT,
-  image_url TEXT,
-  priority TEXT, -- 'high', 'medium', 'someday' for gifts
-  note TEXT, -- "Why I want this" for gifts
-  status TEXT, -- 'dreaming', 'booked', 'visited' for locations
-  date_to_go DATE, -- For travel plans
-  estimated_budget TEXT, -- For travel plans
-  activity_tags TEXT[], -- For locations (e.g., 'foodie', 'nature', 'travel')
-  locations JSONB, -- Sub-locations for travel plans
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+-- Create wishlists table
+CREATE TABLE wishlists (
+  id uuid default gen_random_uuid() primary key,
+  user_id text not null,
+  category text not null default 'gift',
+  item_name text not null,
+  link text,
+  image_url text,
+  priority text,
+  note text,
+  status text,
+  date_to_go date,
+  estimated_budget text,
+  activity_tags text,
+  locations jsonb,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
 );
 
--- Create index for faster lookups
-CREATE INDEX IF NOT EXISTS idx_wishlists_user_id ON wishlists(user_id);
-CREATE INDEX IF NOT EXISTS idx_wishlists_category ON wishlists(category);
-
--- Disable RLS for public access
-ALTER TABLE wishlists DISABLE ROW LEVEL SECURITY;
+-- Create indexes
+create index wishlists_user_id_idx on wishlists(user_id);
+create index wishlists_category_idx on wishlists(category);
