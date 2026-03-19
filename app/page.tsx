@@ -110,7 +110,7 @@ export default function Home() {
           >
             <CharacterCard
               name="Bunny"
-              imageUrl="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Bunny_NT.png"
+              imageUrl="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Bunny.png"
               onClick={() => router.push('/gifts?character=bunny')}
             />
           </div>
@@ -122,7 +122,7 @@ export default function Home() {
           >
             <CharacterCard
               name="Fox"
-              imageUrl="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Fox_BD.png"
+              imageUrl="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Fox.png"
               onClick={() => router.push('/gifts?character=fox')}
             />
           </div>
@@ -134,7 +134,7 @@ export default function Home() {
           >
             <CharacterCard
               name="Cat"
-              imageUrl="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/CatML.png"
+              imageUrl="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Cat.png"
               onClick={() => router.push('/gifts?character=cat')}
             />
           </div>
@@ -146,7 +146,7 @@ export default function Home() {
           >
             <CharacterCard
               name="Golden"
-              imageUrl="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Golden_HH.png"
+              imageUrl="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Golden.png"
               onClick={() => router.push('/gifts?character=golden')}
             />
           </div>
