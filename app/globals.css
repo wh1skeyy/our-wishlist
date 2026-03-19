@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import 'tw-animate-css';
 
 /* Custom styles for 4 of a Kind app */
 @custom-variant dark (&:is(.dark *));

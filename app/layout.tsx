@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Comfortaa, Caveat } from 'next/font/google'
+import { Comfortaa, Caveat, Darumadrop_One } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
@@ -12,6 +12,11 @@ const caveat = Caveat({
   subsets: ["latin"],
   variable: '--font-caveat',
   weight: ['400', '700']
+});
+const darumadropOne = Darumadrop_One({
+  subsets: ["latin"],
+  variable: '--font-darumadrop',
+  weight: ['400']
 });
 
 export const metadata: Metadata = {
@@ -44,7 +49,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${comfortaa.variable} ${caveat.variable} font-sans antialiased`}>
+      <body className={`${comfortaa.variable} ${caveat.variable} ${darumadropOne.variable} font-sans antialiased`}>
         {children}
         <Analytics />
       </body>
