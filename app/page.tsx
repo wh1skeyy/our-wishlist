@@ -29,6 +29,7 @@ export default function Home() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [expandedNote, setExpandedNote] = useState<string | null>(null)
   const [hoveredChar, setHoveredChar] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
 
   const supabase = useMemo<ReturnType<typeof createClient> | null>(() => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -40,11 +41,19 @@ export default function Home() {
   const supabaseMissing = !supabase
 
   const characters = [
-    { id: 'bunny', name: 'Bunny', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Bunny.png', top: '22%', left: '22%', scale: 0.9 },
-    { id: 'fox', name: 'Fox', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Fox.png', top: '22%', left: '78%', scale: 1.1 },
-    { id: 'cat', name: 'Cat', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Cat.png', top: '72%', left: '25%', scale: 1 },
-    { id: 'golden', name: 'Golden', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Golden.png', top: '72%', left: '75%', scale: 1 },
+    { id: 'bunny', name: 'Bunny', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Bunny.png', top: 22, left: 22, scale: 0.9 },
+    { id: 'fox', name: 'Fox', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Fox.png', top: 22, left: 78, scale: 1.1 },
+    { id: 'cat', name: 'Cat', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Cat.png', top: 72, left: 25, scale: 1 },
+    { id: 'golden', name: 'Golden', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Golden.png', top: 72, left: 75, scale: 1 },
   ]
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)')
+    const update = () => setIsMobile(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
 
   useEffect(() => {
     if (activeModal) {
@@ -177,7 +186,12 @@ export default function Home() {
             <div
               key={char.id}
               className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-              style={{ top: char.top, left: char.left }}
+              style={{
+                top: `${char.top}%`,
+                // On mobile, bring characters halfway closer to the center (car).
+                // Note: using a multiplier gives a smoother/fairer spacing than a strict midpoint.
+                left: `${isMobile ? (50 + (char.left - 50) * 0.75) : char.left}%`,
+              }}
               onMouseEnter={() => setHoveredChar(char.id)}
               onMouseLeave={() => setHoveredChar(null)}
               onClick={() => setActiveModal(char.id as ModalType)}
@@ -499,13 +513,13 @@ export default function Home() {
         }
         /* Landscape: 12vw, Portrait: 12vh */
         .char-size {
-          width: 14vw;
+          width: 12vw;
           height: auto;
         }
         @media (orientation: portrait) {
           .char-size {
             width: auto;
-            height: 14vh;
+            height: 12vh;
           }
         }
       `}</style>
