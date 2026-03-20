@@ -40,10 +40,10 @@ export default function Home() {
   const supabaseMissing = !supabase
 
   const characters = [
-    { id: 'bunny', name: 'Bunny', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Bunny.png', top: '22%', left: '22%' },
-    { id: 'fox', name: 'Fox', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Fox.png', top: '22%', left: '78%' },
-    { id: 'cat', name: 'Cat', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Cat.png', top: '72%', left: '25%' },
-    { id: 'golden', name: 'Golden', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Golden.png', top: '72%', left: '75%' },
+    { id: 'bunny', name: 'Bunny', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Bunny.png', top: '22%', left: '22%', scale: 0.9 },
+    { id: 'fox', name: 'Fox', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Fox.png', top: '22%', left: '78%', scale: 1.1 },
+    { id: 'cat', name: 'Cat', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Cat.png', top: '72%', left: '25%', scale: 1 },
+    { id: 'golden', name: 'Golden', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Golden.png', top: '72%', left: '75%', scale: 1 },
   ]
 
   useEffect(() => {
@@ -168,6 +168,7 @@ export default function Home() {
               src="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Car.png"
               alt="Travel Plans"
               className="char-size"
+              style={{ transform: 'scale(1.5)' }}
             />
           </div>
 
@@ -192,6 +193,7 @@ export default function Home() {
                 src={char.image}
                 alt={char.name}
                 className="char-size"
+                style={{ transform: `scale(${char.scale ?? 1})` }}
               />
             </div>
           ))}
