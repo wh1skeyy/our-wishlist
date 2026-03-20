@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { X, Plus, ExternalLink, Trash2, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react'
 
@@ -30,7 +30,14 @@ export default function Home() {
   const [expandedNote, setExpandedNote] = useState<string | null>(null)
   const [hoveredChar, setHoveredChar] = useState<string | null>(null)
 
-  const supabase = createClient()
+  const supabase = useMemo<ReturnType<typeof createClient> | null>(() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (typeof url !== 'string' || !url || typeof anonKey !== 'string' || !anonKey) return null
+    return createClient()
+  }, [])
+
+  const supabaseMissing = !supabase
 
   const characters = [
     { id: 'bunny', name: 'Bunny', image: 'https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Bunny.png', top: '22%', left: '22%' },
@@ -46,6 +53,7 @@ export default function Home() {
   }, [activeModal])
 
   async function fetchItems() {
+    if (!supabase) return
     setLoading(true)
     try {
       let query = supabase.from('wishlists').select('*')
@@ -67,6 +75,7 @@ export default function Home() {
   }
 
   async function addItem(formData: FormData) {
+    if (!supabase) return
     const isTravel = activeModal === 'travels'
 
     const newItem = {
@@ -94,6 +103,7 @@ export default function Home() {
   }
 
   async function deleteItem(id: string) {
+    if (!supabase) return
     try {
       const { error } = await supabase.from('wishlists').delete().eq('id', id)
       if (error) throw error
@@ -128,6 +138,15 @@ export default function Home() {
             4 OF A KIND
           </h1>
         </header>
+
+        {supabaseMissing && (
+          <div className="px-4 text-center mx-auto max-w-xl" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+            <p className="text-lg font-bold">Supabase is not configured.</p>
+            <p className="text-sm mt-1" style={{ color: '#8a7a6a' }}>
+              Add <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to your environment.
+            </p>
+          </div>
+        )}
 
         {/* Characters Canvas */}
         <div className="relative flex-grow">
@@ -294,181 +313,181 @@ export default function Home() {
 
                           {/* Link button */}
                           {item.link && (
-
-                            href = { item.link }
+                            <a
+                              href={item.link}
                               target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl text-white text-sm transition-opacity hover:opacity-80"
-                          style={{ backgroundColor: '#7c9a6e', fontFamily: 'var(--font-darumadrop)' }}
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl text-white text-sm transition-opacity hover:opacity-80"
+                              style={{ backgroundColor: '#7c9a6e', fontFamily: 'var(--font-darumadrop)' }}
                             >
-                          <ExternalLink size={14} />
-                          View Link
-                        </a>
+                              <ExternalLink size={14} />
+                              View Link
+                            </a>
                           )}
+                        </div>
                       </div>
                     </div>
-                    </div>
-              ))}
-            </div>
+                  ))}
+                </div>
               )}
-          </div>
-        </div>
-        </div>
-  )
-}
-
-{/* Add Item Form Modal */ }
-{
-  showAddForm && (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 animate-fade-in">
-      <div
-        className="relative w-full max-w-md rounded-3xl p-6"
-        style={{ backgroundColor: '#f5f0e8' }}
-      >
-        <button
-          onClick={() => setShowAddForm(false)}
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/50 transition-colors"
-          style={{ color: '#5a4a3a' }}
-        >
-          <X size={20} />
-        </button>
-
-        <h3 className="text-2xl mb-6" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-          Add {isTravel ? 'Destination' : 'Wish'}
-        </h3>
-
-        <form action={addItem} className="space-y-4">
-          <div>
-            <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-              {isTravel ? 'Place Name' : 'Item Name'} *
-            </label>
-            <input
-              name="item_name"
-              required
-              className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-              style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-              Image URL
-            </label>
-            <input
-              name="image_url"
-              type="url"
-              className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-              style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-              placeholder="https://..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-              Link
-            </label>
-            <input
-              name="link"
-              type="url"
-              className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-              style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-              placeholder="https://..."
-            />
-          </div>
-
-          {isTravel ? (
-            <>
-              <div>
-                <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-                  Status
-                </label>
-                <select
-                  name="status"
-                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-                  style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-                >
-                  <option value="dreaming">Dreaming</option>
-                  <option value="booked">Booked</option>
-                  <option value="visited">Visited</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-                  Date to Go
-                </label>
-                <input
-                  name="date_to_go"
-                  type="date"
-                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-                  style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-                  Estimated Budget
-                </label>
-                <input
-                  name="estimated_budget"
-                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-                  style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-                  placeholder="e.g. $500-1000"
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-                  Activities
-                </label>
-                <input
-                  name="activity_tags"
-                  className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-                  style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-                  placeholder="Foodie, Nature, Adventure..."
-                />
-              </div>
-            </>
-          ) : (
-            <div>
-              <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-                Priority
-              </label>
-              <select
-                name="priority"
-                className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
-                style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-              >
-                <option value="high">High Priority</option>
-                <option value="medium">Medium</option>
-                <option value="someday">Someday</option>
-              </select>
             </div>
-          )}
-
-          <div>
-            <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
-              {isTravel ? 'Notes' : 'Why I want this'}
-            </label>
-            <textarea
-              name="note"
-              rows={3}
-              className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors resize-none"
-              style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
-            />
           </div>
+        </div>
 
-          <button
-            type="submit"
-            className="w-full py-3 rounded-xl text-white text-lg transition-opacity hover:opacity-90"
-            style={{ backgroundColor: '#7c9a6e', fontFamily: 'var(--font-darumadrop)' }}
-          >
-            Add {isTravel ? 'Destination' : 'to Wishlist'}
-          </button>
-        </form>
-      </div>
-    </div>
-  )
-}
+      )}
 
-<style jsx>{`
+      {/* Add Item Form Modal */}
+      {
+        showAddForm && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 animate-fade-in">
+            <div
+              className="relative w-full max-w-md rounded-3xl p-6"
+              style={{ backgroundColor: '#f5f0e8' }}
+            >
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/50 transition-colors"
+                style={{ color: '#5a4a3a' }}
+              >
+                <X size={20} />
+              </button>
+
+              <h3 className="text-2xl mb-6" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                Add {isTravel ? 'Destination' : 'Wish'}
+              </h3>
+
+              <form action={addItem} className="space-y-4">
+                <div>
+                  <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                    {isTravel ? 'Place Name' : 'Item Name'} *
+                  </label>
+                  <input
+                    name="item_name"
+                    required
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                    style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                    Image URL
+                  </label>
+                  <input
+                    name="image_url"
+                    type="url"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                    style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                    Link
+                  </label>
+                  <input
+                    name="link"
+                    type="url"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                    style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                    placeholder="https://..."
+                  />
+                </div>
+
+                {isTravel ? (
+                  <>
+                    <div>
+                      <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                        Status
+                      </label>
+                      <select
+                        name="status"
+                        className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                        style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                      >
+                        <option value="dreaming">Dreaming</option>
+                        <option value="booked">Booked</option>
+                        <option value="visited">Visited</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                        Date to Go
+                      </label>
+                      <input
+                        name="date_to_go"
+                        type="date"
+                        className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                        style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                        Estimated Budget
+                      </label>
+                      <input
+                        name="estimated_budget"
+                        className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                        style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                        placeholder="e.g. $500-1000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                        Activities
+                      </label>
+                      <input
+                        name="activity_tags"
+                        className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                        style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                        placeholder="Foodie, Nature, Adventure..."
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                      Priority
+                    </label>
+                    <select
+                      name="priority"
+                      className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors"
+                      style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                    >
+                      <option value="high">High Priority</option>
+                      <option value="medium">Medium</option>
+                      <option value="someday">Someday</option>
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm mb-1" style={{ color: '#5a4a3a', fontFamily: 'var(--font-darumadrop)' }}>
+                    {isTravel ? 'Notes' : 'Why I want this'}
+                  </label>
+                  <textarea
+                    name="note"
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[#7c9a6e] transition-colors resize-none"
+                    style={{ borderColor: '#d4c9b8', backgroundColor: '#fff' }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3 rounded-xl text-white text-lg transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: '#7c9a6e', fontFamily: 'var(--font-darumadrop)' }}
+                >
+                  Add {isTravel ? 'Destination' : 'to Wishlist'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )
+      }
+
+      <style jsx>{`
         @keyframes fade-in {
           from { opacity: 0; }
           to { opacity: 1; }
