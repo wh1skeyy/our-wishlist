@@ -168,7 +168,7 @@ export default function Home() {
               src="https://grp-wishlist.s3.ap-southeast-2.amazonaws.com/Car.png"
               alt="Travel Plans"
               className="char-size"
-              style={{ transform: 'scale(1.5)' }}
+              style={{ transform: 'scale(1.7)' }}
             />
           </div>
 
@@ -499,13 +499,13 @@ export default function Home() {
         }
         /* Landscape: 12vw, Portrait: 12vh */
         .char-size {
-          width: 12vw;
+          width: 14vw;
           height: auto;
         }
         @media (orientation: portrait) {
           .char-size {
             width: auto;
-            height: 12vh;
+            height: 14vh;
           }
         }
       `}</style>
